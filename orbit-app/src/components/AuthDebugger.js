@@ -1,5 +1,5 @@
-import React, { useContext } from 'react';
-import { AuthContext } from './../context/AuthContext';
+import React, { useContext } from "react";
+import { AuthContext } from "./../context/AuthContext";
 
 const AuthStateItem = ({ title, value }) => (
   <div className="text-sm">
@@ -12,18 +12,17 @@ const AuthStateItem = ({ title, value }) => (
 
 const AuthDebugger = () => {
   const authContext = useContext(AuthContext);
-  const {
-    token,
-    expiresAt,
-    userInfo
-  } = authContext.authState;
+  const { token, expiresAt, userInfo } = authContext.authState;
   return (
     <section className="rounded-lg shadow bg-white p-4">
       <div className="mb-2">
-        <AuthStateItem title="Token" value={token} />
+        <AuthStateItem title="Token" value={`${token} (${typeof token})`} />
       </div>
       <div className="mb-2">
-        <AuthStateItem title="Expiry" value={expiresAt} />
+        <AuthStateItem
+          title="Expiry"
+          value={`${expiresAt} (${typeof expiresAt})`}
+        />
       </div>
       <div className="mb-2">
         <AuthStateItem
