@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
 import Card from "../components/common/Card";
@@ -12,6 +12,7 @@ import FormSuccess from "./../components/FormSuccess";
 import logo from "./../images/logo.png";
 import { publicFetch } from "../util/fetch";
 import { Redirect } from "react-router";
+import { AuthContext } from "../context/AuthContext";
 
 const SignupSchema = Yup.object().shape({
   firstName: Yup.string().required("First name is required"),
@@ -25,6 +26,7 @@ const Signup = () => {
   const [signupError, setSignupError] = useState();
   const [loginLoading, setLoginLoading] = useState(false);
   const [redirect, setRedirect] = useState(false);
+  const authContext = useContext(AuthContext);
 
   const submitCredentials = async (credentials) => {
     try {
@@ -33,6 +35,7 @@ const Signup = () => {
       console.log(data);
       setSignupSuccess(data.message);
       setSignupError(null);
+      authContext.setAuthState(data);
       setTimeout(() => {
         setRedirect(true);
       }, 700);
