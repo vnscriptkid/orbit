@@ -159,7 +159,12 @@ app.patch("/api/user-role", requireAdmin, async (req, res) => {
 
 app.get("/api/inventory", requireAdmin, async (req, res) => {
   try {
-    const inventoryItems = await InventoryItem.find();
+    const userId = req.user.sub;
+
+    const inventoryItems = await InventoryItem.find({
+      user: userId,
+    });
+
     res.json(inventoryItems);
   } catch (err) {
     return res.status(400).json({ error: err });
@@ -168,7 +173,8 @@ app.get("/api/inventory", requireAdmin, async (req, res) => {
 
 app.post("/api/inventory", requireAdmin, async (req, res) => {
   try {
-    const inventoryItem = new InventoryItem(req.body);
+    const userId = req.user.sub;
+    const inventoryItem = new InventoryItem({ ...req.body, user: userId });
     await inventoryItem.save();
     res.status(201).json({
       message: "Inventory item created!",
@@ -184,9 +190,13 @@ app.post("/api/inventory", requireAdmin, async (req, res) => {
 
 app.delete("/api/inventory/:id", requireAdmin, async (req, res) => {
   try {
+    const userId = req.user.sub;
+
     const deletedItem = await InventoryItem.findOneAndDelete({
       _id: req.params.id,
+      user: userId,
     });
+
     res.status(201).json({
       message: "Inventory item deleted!",
       deletedItem,
