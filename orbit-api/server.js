@@ -5,6 +5,7 @@ const cors = require("cors");
 const jwtDecode = require("jwt-decode");
 const mongoose = require("mongoose");
 const expressJwt = require("express-jwt");
+const cookieParser = require("cookie-parser");
 
 const dashboardData = require("./data/dashboard");
 const User = require("./data/User");
@@ -17,11 +18,15 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(cookieParser());
 
 const checkJwt = expressJwt({
   secret: process.env.JWT_SECRET,
   issuer: "api.orbit",
   audience: "api.orbit",
+  getToken: function fromCookie(req) {
+    return req.cookies.token;
+  },
 });
 
 /////// AUTH ROUTES
@@ -50,9 +55,12 @@ app.post("/api/authenticate", async (req, res) => {
       const decodedToken = jwtDecode(token);
       const expiresAt = decodedToken.exp;
 
+      res.cookie("token", token, {
+        httpOnly: true,
+      });
+
       res.json({
         message: "Authentication successful!",
-        token,
         userInfo,
         expiresAt,
       });
@@ -106,9 +114,12 @@ app.post("/api/signup", async (req, res) => {
         role,
       };
 
+      res.cookie("token", token, {
+        httpOnly: true,
+      });
+
       return res.json({
         message: "User created!",
-        token,
         userInfo,
         expiresAt,
       });
@@ -133,11 +144,7 @@ const requireAdmin = (req, res, next) => {
   res.status(403).json({ message: "Unauthorized" });
 };
 
-app.get(
-  "/api/dashboard-data",
-  (req, res) =>
-    console.log("/api/dashboard-data: ", req.user) || res.json(dashboardData)
-);
+app.get("/api/dashboard-data", (req, res) => res.json(dashboardData));
 
 app.patch("/api/user-role", requireAdmin, async (req, res) => {
   try {
