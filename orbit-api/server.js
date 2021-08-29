@@ -6,6 +6,7 @@ const jwtDecode = require("jwt-decode");
 const mongoose = require("mongoose");
 const expressJwt = require("express-jwt");
 const cookieParser = require("cookie-parser");
+const csurf = require("csurf");
 
 const dashboardData = require("./data/dashboard");
 const User = require("./data/User");
@@ -19,6 +20,9 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
+const csrfProtection = csurf({
+  cookie: true,
+});
 
 const checkJwt = expressJwt({
   secret: process.env.JWT_SECRET,
@@ -137,7 +141,12 @@ app.post("/api/signup", async (req, res) => {
 
 /////// DATA ROUTES
 app.use(checkJwt);
+app.use(csrfProtection);
 ////////////////////
+
+app.get("/api/csrf-token", (req, res) => {
+  res.json({ csrfToken: req.csrfToken() });
+});
 
 const requireAdmin = (req, res, next) => {
   if (req.user && req.user.role === "admin") return next();
@@ -280,6 +289,10 @@ app.patch("/api/bio", async (req, res) => {
 app.use(function (err, req, res, next) {
   if (err.name === "UnauthorizedError") {
     return res.status(401).send("invalid token...");
+  }
+
+  if (err.name === "ForbiddenError") {
+    return res.status(403).send(err.message);
   }
 
   res.status(500).send("Something broke!");
